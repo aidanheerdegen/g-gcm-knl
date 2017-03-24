@@ -1,0 +1,83 @@
+*
+*     Array dimensioning parameters and position of ocean in atmosphere
+*     -----------------------------------------------------------------
+
+*     User settable grid parameters:
+      integer nxta,nyta,nla,nxaooc,nyaooc,ndxr,nlo
+*     Atmosphere
+      parameter ( nxta = 128, nyta = 64, nla = 3 )
+*     Ocean
+      parameter ( nxaooc = 32, nyaooc = 40, ndxr = 12, nlo = 3 )
+
+*     nxta, nyta are the numbers of atmospheric gridcells W/E and N/S.
+*     nxaooc, nyaooc are the numbers of atmospheric gridcells over
+*     the ocean, and thus define the size of the ocean domain.
+*     nla, nlo are the numbers of layers in the atmosphere and ocean.
+*     ndxr is the ratio of atmospheric/oceanic gridlengths (dxa/dxo).
+*     Need to choose nxta to be at least nxaooc;
+*     in the cyclic_ocean case nxaooc must equal nxta.
+*     Need to choose nyta to be at least nyaooc
+
+*     Need to choose nxta to be an efficient (factorisable) FFT length.
+*     Need to choose nxaooc and ndxr so as to make nxto a good FFT length
+*     (see below). This means they both need to have small prime factors.
+
+*     For FFTPACK, optimised routines are provided for transforms
+*     of lengths 2, 3, 4 and 5. So nxta, ndxr and nxaooc should
+*     ideally be chosen to have prime factors of 2, 3 and 5 only.
+
+*     Derived grid parameters (do not alter):
+      integer nxpa,nypa,nxtaor,nytaor,nxpaor,nypaor,
+     &        nxto,nyto,nxpo,nypo,nx1,ny1
+      double precision atnorm,ocnorm
+      parameter ( nxpa = nxta+1, nypa = nyta+1,
+     &            nxtaor = nxta*ndxr, nytaor = nyta*ndxr,
+     &            nxpaor = nxtaor+1, nypaor = nytaor+1,
+     &            nxto = ndxr*nxaooc, nyto = ndxr*nyaooc,
+     &            nx1 = 1, ny1 = 1 + (nyta-nyaooc)/2,
+     &            nxpo = nxto+1, nypo = nyto+1,
+     &            atnorm = 1.0d0/(nxta*nyta),
+     &            ocnorm = 1.0d0/(nxto*nyto) )
+
+*     nxpa, nypa are the numbers of atmospheric p points W/E and N/S.
+*     nxtaor, nytaor are the numbers of atmos. T points at ocean resolution
+*     nxpaor, nypaor are the numbers of atmos. p points at ocean resolution
+*     (required for the new windstress formulation introduced at v1.4.0)
+*     nxto, nyto are the numbers of oceanic T points W/E and N/S.
+*     nxpo, nypo are the numbers of oceanic p points W/E and N/S.
+*     nx1, ny1 are starting indices for the ocean in the atmos. grid.
+*     We choose them to centre the ocean in the atmospheric domain (if possible).
+*     atnorm, ocnorm are normalisation factors for computing mean
+*     values, and are both equal to 1/(number of T gridcells).
+
+*     Rotation parameters (for both atmosphere and ocean)
+*     ---------------------------------------------------
+      double precision fnot,beta
+      parameter ( fnot = 1.0d-4, beta = 2.0D-11 )         !! Idealised N.Atl.
+
+*     fnot is the Coriolis parameter at the
+*     central latitude of the domain (rad s^-1)
+*     beta is the y-derivative of the Coriolis parameter (rad s^-1 m^-1)
+
+*     Covariance subsampling and array dimensioning parameters
+*     --------------------------------------------------------
+      integer nsa,nva,nca,nso,nvo,nco
+      parameter ( nsa = 2, nva = nxta*nyta/(nsa*nsa),
+     &            nso = 6, nvo = nxto*nyto/(nso*nso),
+     &            nca = nva*(nva+1)/2, nco = nvo*(nvo+1)/2 )
+
+*     nsa is the number of atmos. gridpoints (in either
+*     direction) averaged over to produce the subsampled
+*     results accumulated to compute covariance statistics
+*     nso is corresponding no. of ocean gridpoints used
+*     nva is the length of the subsampled atmos. state vector
+*     nsa needs to be a factor of both nxta and nyta
+*     nso needs to be a factor of both nxto and nyto
+*     nvo is the length of the subsampled ocean state vector
+*     nca is the number of independent elements
+*     in the covariance matrix for the atmosphere
+*     (only the lower triangular elements are stored)
+*     nco is the number of independent elements for the ocean
+*     These quantities are used for dimensioning storage
+*     in the common blocks covarat.cmn and covaroc.cmn
+*

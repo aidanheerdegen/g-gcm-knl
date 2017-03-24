@@ -1,0 +1,26 @@
+Count file does not exist - making count.file ...
+... and making directory double_gyre_test_v150
+Run number  1  of  2
+q-gcm starting  ..... 
+Mon Aug  5 19:41:51 EST 2013
+---------------------
+Saving data to  /short/g40/amh157/q-gcm//double_gyre_test_v150/yrs000-001
+q-gcm finished
+---------------------
+Mon Aug  5 20:00:46 EST 2013
+Jobs Not Finished
+Self-submitting next job
+345194.r-man2
+======================================================================================
+			Resource Usage on 2013-08-05 20:00:56.488169:
+	JobId:  345142.r-man2  
+	Project: g40 
+	Exit Status: 0 (Linux Signal 0)
+	Service Units: 2.53
+	NCPUs Requested: 8				NCPUs Used: 8
+							CPU Time Used: 02:30:56
+	Memory Requested: 2000mb 			Memory Used: 155mb
+							Vmem Used: 987mb
+	Walltime requested: 10:00:00 			Walltime Used: 00:19:05
+	jobfs request: 100mb				jobfs used: 1mb
+======================================================================================

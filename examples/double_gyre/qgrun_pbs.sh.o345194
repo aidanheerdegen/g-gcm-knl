@@ -1,0 +1,23 @@
+Count file exists
+Run number  2  of  2
+q-gcm starting  ..... 
+Mon Aug  5 20:01:21 EST 2013
+---------------------
+Saving data to  /short/g40/amh157/q-gcm//double_gyre_test_v150/yrs001-002
+q-gcm finished
+---------------------
+Mon Aug  5 20:21:25 EST 2013
+All  2  Jobs Finished
+======================================================================================
+			Resource Usage on 2013-08-05 20:21:30.711892:
+	JobId:  345194.r-man2  
+	Project: g40 
+	Exit Status: 0 (Linux Signal 0)
+	Service Units: 2.70
+	NCPUs Requested: 8				NCPUs Used: 8
+							CPU Time Used: 02:39:54
+	Memory Requested: 2000mb 			Memory Used: 155mb
+							Vmem Used: 987mb
+	Walltime requested: 10:00:00 			Walltime Used: 00:20:21
+	jobfs request: 100mb				jobfs used: 1mb
+======================================================================================

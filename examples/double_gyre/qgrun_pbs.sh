@@ -1,0 +1,108 @@
+#!/bin/csh
+#PBS -P g40
+#PBS -q normal 
+#PBS -l walltime=10:00:00,mem=2000MB,ncpus=1
+#PBS -l wd
+## Shell script to run Q-GCM double gyre example.
+## This version is designed for the VAYU@ANU,
+## but is a useful guide for any PBS system.
+## Q-GCM will run in segments of 5 years
+
+## Choose file structure
+set basedir = /short/g40/amh157/q-gcm/
+set run = double_gyre_test_v150
+set qgdir = ../../src
+## Choose to run maxcount segments of yrinc years each.
+set maxcount = 10
+set yrinc = 1   ## This must match trun in input.params.
+
+if ( -f count.file ) then
+    echo "Count file exists"
+    ## ensure model will start off lastday file, rather than rbal
+    sed -e "s/rbal/lastday.nc/g" input.params > tmp.params
+    cp tmp.params input.params
+    rm tmp.params
+else
+    echo "Count file does not exist - making count.file ..."
+    echo 1 >count.file || exit
+    chmod 0400 count.file # read-only
+    ## make a new data directory
+    echo "... and making directory "$run
+    mkdir $basedir/$run || exit # exit if $run dir already exists
+    ## set model to start off as rbal
+    sed -e "s/lastday.nc/rbal/g" input.params > tmp.params
+    cp tmp.params input.params
+    rm tmp.params
+endif
+
+set count=`cat <count.file` || exit # exits if count.file has no read access
+chmod 0000 count.file # no access - prevents a concurrent run of this script unless we're very unlucky with timing
+
+echo "Run number " $count " of " $maxcount
+
+if ( $count > $maxcount ) then
+    echo "Count exceeds maxcount. Removing count.file and exiting."
+    chmod 0200 count.file # write-only
+    rm count.file
+    exit
+endif
+
+if ( -d $basedir/$run ) then # if count.file already existed but $runs doesn't
+else
+    echo "Error: "$basedir/$run" doesn't exist. Removing count.file and exiting."
+    chmod 0200 count.file # write-only
+    rm count.file
+    exit
+endif
+
+
+## make runtime directory
+@ ppa =  $yrinc * ($count - 1)
+@ ppb =  $yrinc * $count
+printf %03d-%03d $ppa $ppb > tmp.zz
+set ct=`cat <tmp.zz`
+rm tmp.zz
+
+echo "q-gcm starting  ..... "
+date
+echo "---------------------"
+
+echo "Saving data to  $basedir/$run/yrs"$ct
+mkdir $basedir/$run/yrs$ct
+
+echo $basedir/$run/yrs$ct/ >& outdata.dat # specify where q-gcm should send its output
+cp input.params $basedir/$run/yrs$ct/
+cp parameter.src $basedir/$run/yrs$ct/
+cp qgrun_pbs.sh $basedir/$run/yrs$ct/
+
+setenv OMP_NUM_THREADS 1 # MAKE THIS LINE MATCH THE HEADER !!!
+$qgdir/q-gcm >& zz.out
+
+echo "q-gcm finished"
+echo "---------------------"
+date
+
+mv zz.out $basedir/$run/yrs$ct/
+
+## copy a restart file here
+cp $basedir/$run/yrs$ct/lastday.nc .
+
+ 
+if ( $count >= $maxcount ) then
+    echo "All " $count " Jobs Finished"
+    chmod 0200 count.file # write-only
+    rm count.file # NB: a re-run starts from count=1 but with lastday.nc from the end of this run
+    exit
+else
+    echo "Jobs Not Finished"
+    echo "Self-submitting next job"
+endif
+@ count++
+chmod 0200 count.file # write-only
+echo $count >count.file
+chmod 0400 count.file # read-only
+
+# self-submit again
+qsub qgrun_pbs.sh
+
+exit
